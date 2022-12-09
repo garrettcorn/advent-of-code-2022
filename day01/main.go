@@ -97,7 +97,7 @@ func main() {
 	filePath := "./input"
 	es := getElvesFromFile(filePath)
 	elf := getElfWithHighestCalories(es)
-	fmt.Printf("The elf with the highest calories has %v calories.\n", elf.TotalCalories())
+	fmt.Printf("PART1: The elf with the highest calories has %v calories.\n", elf.TotalCalories())
 	es = getTopThreeElvesWithHighestCalories(es)
-	fmt.Printf("The top 3 elves have %v calories.\n", sumElvesCalories(es))
+	fmt.Printf("PART2: The top 3 elves have %v calories.\n", sumElvesCalories(es))
 }
