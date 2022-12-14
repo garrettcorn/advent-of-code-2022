@@ -14,7 +14,7 @@ type program struct {
 	version string
 }
 
-func (p program) CRT(cycle int) string {
+func (p program) CRT(cycle, width int) string {
 	s := ""
 	i := 0
 	registerX := 1
@@ -22,13 +22,13 @@ func (p program) CRT(cycle int) string {
 		for _, inst := range p.xi {
 			for z := 0; z < inst.cycles; z++ {
 				// fmt.Printf("i=%v x=%v\n", i, registerX)
-				if i%40 == registerX-1 || i%40 == registerX || i%40 == registerX+1 {
+				if i%width == registerX-1 || i%width == registerX || i%width == registerX+1 {
 					s += "#"
 				} else {
 					s += "."
 				}
 				i++
-				if i != 0 && i%40 == 0 {
+				if i != 0 && i%width == 0 {
 					s += "\n"
 				}
 			}
@@ -118,5 +118,6 @@ func main() {
 	fmt.Printf("PART1: %v\n", sumOfSignalStrengths(p, cycles))
 
 	cycle := 240
-	fmt.Printf("PART2: \n%v\n", p.CRT(cycle))
+	width := 40
+	fmt.Printf("PART2: \n%v\n", p.CRT(cycle, width))
 }
