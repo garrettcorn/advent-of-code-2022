@@ -90,7 +90,7 @@ func (b *board) ExecuteInstruction(i instruction) {
 	for a := 0; a < i.amount; a++ {
 		b.turn++
 		b.MovePiece(i.direction, 0)
-		for idx, _ := range b.pieces {
+		for idx := range b.pieces {
 			if idx != 0 {
 				b.MoveTailPiece(idx-1, idx)
 			}
