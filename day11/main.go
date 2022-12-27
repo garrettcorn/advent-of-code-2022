@@ -207,7 +207,7 @@ func main() {
 	fmt.Printf("PART1: \n%v\t(sample=10605)\n\n", mitm.MonkeyBusiness())
 
 	mitm = getMitm(filePath)
-	rounds = 1000
+	rounds = 10000
 	manageWorry = false
 	mitm.Round(rounds, manageWorry)
 	fmt.Printf("%v", mitm.StringAllMonkeyBusiness())
