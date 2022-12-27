@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"math/big"
 	"os"
 	"sort"
 	"strconv"
@@ -10,13 +11,11 @@ import (
 )
 
 type item struct {
-	worry      int
-	multiplyBy []int
-	addBy      []int
+	worry big.Int
 }
 
 func (i item) String() string {
-	return fmt.Sprintf("%v", i.worry)
+	return fmt.Sprintf("%v", i.worry.Text(10))
 }
 
 type throwTo struct {
@@ -26,8 +25,8 @@ type throwTo struct {
 
 type monkey struct {
 	items       []item
-	opperation  func(int) int
-	test        func(int) bool
+	opperation  func(*big.Int)
+	test        func(big.Int) bool
 	action      throwTo
 	inspections int
 }
@@ -42,7 +41,7 @@ func (m monkey) String() (s string) {
 }
 
 func (m *monkey) Inspect(itemIndex int) {
-	m.items[itemIndex].worry = m.opperation(m.items[itemIndex].worry)
+	m.opperation(&m.items[itemIndex].worry)
 }
 
 func (m *monkey) AddItem(i item) {
@@ -53,11 +52,11 @@ func (m *monkey) RemoveItem(itemIndex int) {
 	m.items = append(m.items[:itemIndex], m.items[itemIndex+1:]...)
 }
 
-func (m *monkey) ModifyItemWorry(itemIndex int, f func(int) int) {
-	m.items[itemIndex].worry = f(m.items[itemIndex].worry)
+func (m *monkey) ModifyItemWorry(itemIndex int, f func(*big.Int)) {
+	f(&m.items[itemIndex].worry)
 }
 
-func (m *monkey) Test(itemIndex uint64) bool {
+func (m *monkey) Test(itemIndex int) bool {
 	return m.test(m.items[itemIndex].worry)
 }
 
@@ -105,30 +104,30 @@ func getMitm(filePath string) monkeyInTheMiddle {
 						if err != nil {
 							panic(err)
 						}
-						m.items = append(m.items, item{worry: val})
+						m.items = append(m.items, item{worry: *big.NewInt(int64(val))})
 					}
 				case "operation:":
 					op := xs[4]
 					secondVar := xs[5]
 					if op == "+" {
 						if secondVar == "old" {
-							m.opperation = func(old int) int { return old + old }
+							m.opperation = func(old *big.Int) { old.Sub(old, old) }
 						} else {
 							i, err := strconv.Atoi(secondVar)
 							if err != nil {
 								panic(err)
 							}
-							m.opperation = func(old int) int { return old + i }
+							m.opperation = func(old *big.Int) { old.Add(old, big.NewInt(int64(i))) }
 						}
 					} else if op == "*" {
 						if secondVar == "old" {
-							m.opperation = func(old int) int { return old * old }
+							m.opperation = func(old *big.Int) { old.Mul(old, old) }
 						} else {
 							i, err := strconv.Atoi(secondVar)
 							if err != nil {
 								panic(err)
 							}
-							m.opperation = func(old int) int { return old * i }
+							m.opperation = func(old *big.Int) { old.Mul(old, big.NewInt(int64(i))) }
 						}
 					}
 
@@ -137,8 +136,8 @@ func getMitm(filePath string) monkeyInTheMiddle {
 					if err != nil {
 						panic(err)
 					}
-					m.test = func(itemWorry int) bool {
-						return itemWorry%i == 0
+					m.test = func(itemWorry big.Int) bool {
+						return big.NewInt(0).Mod(&itemWorry, big.NewInt(int64(i))).Cmp(big.NewInt(0)) == 0
 					}
 				case "if":
 					i, err := strconv.Atoi(xs[5])
@@ -161,11 +160,12 @@ func getMitm(filePath string) monkeyInTheMiddle {
 
 func (mitm *monkeyInTheMiddle) Round(rounds int, manageWorry bool) {
 	for i := 0; i < rounds; i++ {
+		fmt.Printf("i: %v\n", i)
 		for idx := range mitm.monkeys {
 			for range mitm.monkeys[idx].items {
 				mitm.monkeys[idx].Inspect(0)
 				if manageWorry {
-					mitm.monkeys[idx].ModifyItemWorry(0, func(i int) int { return i / 3 })
+					mitm.monkeys[idx].ModifyItemWorry(0, func(i *big.Int) { i.Div(i, big.NewInt(3)) })
 				}
 				throwItemto := mitm.monkeys[idx].ThrowItemTo(0)
 				mitm.monkeys[throwItemto].AddItem(mitm.monkeys[idx].items[0])
@@ -198,13 +198,13 @@ func (mitm monkeyInTheMiddle) StringAllMonkeyBusiness() (s string) {
 }
 
 func main() {
-	filePath := "./sample"
+	filePath := "./input"
 	mitm := getMitm(filePath)
 	rounds := 20
 	manageWorry := true
 	mitm.Round(rounds, manageWorry)
 	// fmt.Printf("%v", mitm.StringAllMonkeyBusiness())
-	fmt.Printf("PART1: \n%v\n\n", mitm.MonkeyBusiness())
+	fmt.Printf("PART1: \n%v\t(sample=10605)\n\n", mitm.MonkeyBusiness())
 
 	mitm = getMitm(filePath)
 	rounds = 1000
